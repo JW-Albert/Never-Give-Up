@@ -1,0 +1,13 @@
+# Line Bot 設定
+LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token_here
+LINE_CHANNEL_SECRET=your_line_channel_secret_here
+
+# OpenAI 設定 (可選)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# 郵件設定 (可選，用於發送每日總結)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password_here
+EMAIL_TO=recipient_email@example.com 

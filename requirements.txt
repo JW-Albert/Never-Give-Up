@@ -1,0 +1,10 @@
+flask==3.1.1
+line-bot-sdk==3.17.1
+python-dotenv==1.1.1
+schedule==1.2.2
+openai==1.95.1
+sqlite3
+smtplib
+email
+datetime
+threading 
