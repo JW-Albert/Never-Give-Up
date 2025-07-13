@@ -54,6 +54,7 @@ EMAIL_TO=recipient_email@example.com
 3. 選擇 "Messaging API" 頻道類型
 4. 取得 Channel Access Token 和 Channel Secret
 5. 設定 Webhook URL：`https://your-domain.com/callback`
+   **注意：Line Bot要求使用HTTPS，請確保您的網域已安裝SSL憑證**
 
 ### 4. 啟動機器人
 
@@ -112,6 +113,7 @@ Never-Give-Up/
 ├── requirements.txt      # Python依賴
 ├── env_example.txt       # 環境變數範例
 ├── deploy.sh            # VPS部署腳本
+├── ssl_manager.sh       # SSL憑證管理腳本
 ├── VPS_DEPLOYMENT.md    # VPS部署指南
 ├── EXPENSE_GUIDE.md     # 記帳功能指南
 └── README.md            # 專案說明
@@ -146,10 +148,18 @@ python app.py
 詳細的VPS部署指南請參考 [VPS_DEPLOYMENT.md](VPS_DEPLOYMENT.md)
 
 ```bash
-# 快速部署
+# 快速部署（包含SSL憑證自動安裝）
 chmod +x deploy.sh
 ./deploy.sh
 ```
+
+**部署腳本會自動：**
+- 安裝所有必要套件
+- 設定Nginx反向代理
+- 安裝Let's Encrypt SSL憑證
+- 配置防火牆
+- 建立管理腳本
+- 提供SSL憑證管理工具
 
 ### 雲端部署
 推薦使用以下平台：
@@ -189,6 +199,16 @@ A: 請參考 [Google 安全性設定](https://support.google.com/accounts/answer
 
 ### Q: 機器人沒有回應怎麼辦？
 A: 檢查Webhook URL設定和伺服器是否正常運行
+
+### Q: SSL憑證如何安裝？
+A: 部署腳本會自動安裝Let's Encrypt憑證，或使用SSL管理工具：
+```bash
+# 互動式SSL管理
+./ssl_manager.sh
+
+# 手動安裝
+sudo certbot --nginx -d your-domain.com
+```
 
 ### Q: 如何修改定時提醒時間？
 A: 編輯 `config.py` 中的時間設定

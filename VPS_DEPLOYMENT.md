@@ -176,6 +176,15 @@ cd ~/never-give-up
 
 # 備份資料庫
 ./manage.sh backup
+
+# SSL憑證管理
+./manage.sh ssl
+
+# 更新SSL憑證
+./manage.sh ssl-renew
+
+# 完整SSL管理工具
+./ssl_manager.sh
 ```
 
 ## 🌐 網域設定
@@ -187,13 +196,39 @@ cd ~/never-give-up
 A    your-domain.com    your-vps-ip
 ```
 
-### 2. SSL憑證（可選）
+### 2. SSL憑證管理
 
-使用Let's Encrypt免費SSL：
+部署腳本會自動安裝SSL管理工具：
 
 ```bash
+# 使用互動式SSL管理工具
+./ssl_manager.sh
+```
+
+SSL管理工具功能：
+- 安裝新SSL憑證
+- 更新現有憑證
+- 查看憑證狀態
+- 刪除憑證
+- 設定自動更新
+- 測試憑證
+- 查看Nginx SSL配置
+
+### 3. SSL憑證（必需）
+
+Line Bot要求使用HTTPS，請安裝Let's Encrypt免費SSL：
+
+```bash
+# 安裝Certbot
 sudo apt install certbot python3-certbot-nginx
+
+# 安裝SSL憑證
 sudo certbot --nginx -d your-domain.com
+
+# 設定自動更新
+sudo crontab -e
+# 加入以下行：
+# 0 12 * * * /usr/bin/certbot renew --quiet
 ```
 
 ### 3. 更新Nginx配置
@@ -329,7 +364,19 @@ sudo nano /etc/supervisor/conf.d/never-give-up.conf
    ./manage.sh backup
    ```
 
-4. **記憶體不足**
+4. **SSL憑證問題**
+   ```bash
+   # 檢查憑證狀態
+   sudo certbot certificates
+   
+   # 重新安裝憑證
+   ./manage.sh ssl
+   
+   # 手動更新憑證
+   sudo certbot renew
+   ```
+
+5. **記憶體不足**
    ```bash
    # 查看記憶體使用
    free -h

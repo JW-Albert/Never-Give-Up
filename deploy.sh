@@ -17,7 +17,7 @@ sudo apt update && sudo apt upgrade -y
 
 # 安裝必要套件
 echo "🔧 安裝必要套件..."
-sudo apt install -y python3 python3-pip python3-venv nginx supervisor git curl
+sudo apt install -y python3 python3-pip python3-venv nginx supervisor git curl certbot python3-certbot-nginx
 
 # 建立專案目錄
 PROJECT_DIR="/home/$USER/never-give-up"
@@ -79,6 +79,32 @@ EOF
 # 啟用Nginx站點
 sudo ln -sf /etc/nginx/sites-available/never-give-up /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
+
+# 安裝SSL憑證
+echo "🔒 安裝SSL憑證..."
+echo "請輸入您的網域名稱 (例如: bot.yourdomain.com):"
+read -p "網域: " DOMAIN_NAME
+
+if [ ! -z "$DOMAIN_NAME" ]; then
+    # 更新Nginx配置中的網域
+    sudo sed -i "s/your-domain.com/$DOMAIN_NAME/g" /etc/nginx/sites-available/never-give-up
+    sudo nginx -t && sudo systemctl reload nginx
+    
+    # 使用Certbot安裝SSL憑證
+    echo "🔐 正在安裝Let's Encrypt SSL憑證..."
+    sudo certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email admin@$DOMAIN_NAME
+    
+    if [ $? -eq 0 ]; then
+        echo "✅ SSL憑證安裝成功！"
+        echo "🌐 HTTPS URL: https://$DOMAIN_NAME/callback"
+    else
+        echo "⚠️ SSL憑證安裝失敗，請檢查網域設定"
+        echo "您可以稍後手動執行: sudo certbot --nginx -d $DOMAIN_NAME"
+    fi
+else
+    echo "⚠️ 未輸入網域，跳過SSL憑證安裝"
+    echo "您可以稍後手動安裝SSL憑證"
+fi
 
 # 重啟supervisor
 echo "🔄 重啟Supervisor..."
@@ -160,8 +186,22 @@ case "\$1" in
         cp \$PROJECT_DIR/never_give_up.db \$PROJECT_DIR/backup_\$(date +%Y%m%d_%H%M%S).db
         echo "備份完成"
         ;;
+    ssl)
+        echo "🔒 SSL憑證管理..."
+        echo "請輸入網域名稱:"
+        read -p "網域: " DOMAIN
+        if [ ! -z "\$DOMAIN" ]; then
+            sudo certbot --nginx -d \$DOMAIN
+        else
+            echo "未輸入網域"
+        fi
+        ;;
+    ssl-renew)
+        echo "🔄 更新SSL憑證..."
+        sudo certbot renew
+        ;;
     *)
-        echo "使用方法: \$0 {start|stop|restart|status|logs|update|backup}"
+        echo "使用方法: \$0 {start|stop|restart|status|logs|update|backup|ssl|ssl-renew}"
         exit 1
         ;;
 esac
@@ -169,12 +209,19 @@ EOF
 
 chmod +x $PROJECT_DIR/manage.sh
 
+# 複製SSL管理腳本
+echo "🔒 複製SSL管理腳本..."
+cp ssl_manager.sh $PROJECT_DIR/
+chmod +x $PROJECT_DIR/ssl_manager.sh
+
 echo ""
 echo "✅ 部署完成！"
 echo ""
 echo "📋 後續步驟："
 echo "1. 編輯環境變數: nano $PROJECT_DIR/.env"
-echo "2. 設定網域: sudo nano /etc/nginx/sites-available/never-give-up"
+if [ -z "$DOMAIN_NAME" ]; then
+    echo "2. 設定網域並安裝SSL: sudo certbot --nginx -d your-domain.com"
+fi
 echo "3. 重啟服務: sudo supervisorctl restart never-give-up"
 echo "4. 檢查狀態: $PROJECT_DIR/manage.sh status"
 echo ""
@@ -186,8 +233,15 @@ echo "  狀態: $PROJECT_DIR/manage.sh status"
 echo "  日誌: $PROJECT_DIR/manage.sh logs"
 echo "  更新: $PROJECT_DIR/manage.sh update"
 echo "  備份: $PROJECT_DIR/manage.sh backup"
+echo "  SSL: $PROJECT_DIR/manage.sh ssl"
+echo "  更新SSL: $PROJECT_DIR/manage.sh ssl-renew"
+echo "  SSL管理: $PROJECT_DIR/ssl_manager.sh"
 echo ""
-echo "🌐 Webhook URL: http://your-domain.com/callback"
+if [ ! -z "$DOMAIN_NAME" ]; then
+    echo "🌐 Webhook URL: https://$DOMAIN_NAME/callback"
+else
+    echo "🌐 Webhook URL: http://your-domain.com/callback (請設定網域後更新)"
+fi
 echo "📧 日誌位置: /var/log/never-give-up.out.log"
 echo ""
 echo "💪 Never Give Up! 部署成功！" 
